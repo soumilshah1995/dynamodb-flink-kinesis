@@ -1,0 +1,80 @@
+service: dynamodb-hudi-flink
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.7
+  memorySize: 512
+  timeout: 600
+  architecture: x86_64
+  stackTags:
+    product: datateam
+    env: qa
+    created-date: 2022-04-26
+    team: python-dev
+    customer-impact: false
+    terraform: false
+
+useDotenv: true
+
+functions:
+  orders:
+    name : orders-dynamodb-preprocessor
+    handler: orders.lambda_handler
+    environment:
+      DEV_AWS_ACCESS_KEY: ${env:DEV_ACCESS_KEY}
+      DEV_AWS_SECRET_KEY: ${env:DEV_SECRET_KEY}
+      DEV_AWS_REGION_NAME: ${env:DEV_AWS_REGION_NAME}
+      STREAM_NAME : ${env:KinesisOrderStream}
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - DynamoDBOrdersTable
+              - StreamArn
+          batchSize: ${env:BATCH_SIZE}
+          startingPosition: LATEST
+          maximumRetryAttempts: 10
+
+
+resources:
+
+  Resources:
+
+    DynamoDBOrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:DYNAMO_DB_TABLE_NAME_Order}
+        AttributeDefinitions:
+          - AttributeName: orderid
+            AttributeType: S
+          - AttributeName: customer_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: orderid
+            KeyType: HASH
+          - AttributeName: customer_id
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableClass: STANDARD
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+
+    KinesisOrderStream:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: ${env:KinesisOrderStream}
+        ShardCount: 1
+        RetentionPeriodHours: ${env:RetentionPeriodHoursKinesisOrderStream}
+        StreamModeDetails:
+          StreamMode: PROVISIONED
+
+    GlueDatabase:
+      Type: AWS::Glue::Database
+      Properties:
+        CatalogId: ${env:ACCOUNT}
+        DatabaseInput:
+          Name: ${env:GLUE_DATABASE}

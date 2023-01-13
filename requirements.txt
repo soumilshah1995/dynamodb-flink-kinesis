@@ -1,0 +1,4 @@
+pynamodb
+python-dotenv
+Faker
+boto3
