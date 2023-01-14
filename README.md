@@ -15,8 +15,10 @@ npx sls deploy
 
 #### Download links
 ```
-https://repo1.maven.org/maven2/org/apache/flink/flink-s3-fs-hadoop/1.13.2/flink-s3-fs-hadoop-1.13.2.jar
 https://repo1.maven.org/maven2/org/apache/flink/flink-s3-fs-hadoop/1.13.0/flink-s3-fs-hadoop-1.13.0.jar
+
+
+https://repo1.maven.org/maven2/org/apache/hudi/hudi-flink-bundle_2.12/0.10.1/hudi-flink-bundle_2.12-0.10.1.jar
 
 ```
 
